@@ -12,10 +12,13 @@ name = "SelfReferentialDAO"
 # along the orbit projection) machinery.  comp-cat-theory and
 # kan-tactics come in transitively through it and stay importable.
 #
-# Local development uses a `path` require so the build reuses the
-# already-built `unified-aggregation-theory` artifacts next door.
-# Downstream (reservoir) consumers should swap this for the git require
-# documented in README.md.
+# Depended on by git, so a fresh clone resolves the whole chain without any
+# sibling checkout (comp-cat-theory and kan-tactics arrive transitively and
+# stay importable).  Pin `rev` to a tag or commit for a reproducible
+# downstream build; `main` tracks the latest.  To develop against a local
+# UAT checkout next door instead, swap this for `path =
+# "../unified-aggregation-theory"`.
 [[require]]
 name = "unified-aggregation-theory"
-path = "../unified-aggregation-theory"
+git = "https://github.com/MavenRain/unified-aggregation-theory.git"
+rev = "main"

@@ -103,16 +103,16 @@ normal `lake build` does not build it.
 lake build
 ```
 
-Local development uses a `path` require on a sibling
-`../unified-aggregation-theory` checkout so the build reuses its
-already-built artifacts. Downstream (reservoir) consumers should depend
-on this library, and swap the path require for the git form:
+This library depends on `unified-aggregation-theory` by git (`rev =
+"main"`), so a fresh clone resolves the whole chain (comp-cat-theory and
+kan-tactics arrive transitively) with no sibling checkout required. Pin
+`rev` to a tag or commit instead of `main` for a reproducible build. To
+develop against a local UAT checkout next door, swap the git require for:
 
 ```toml
 [[require]]
 name = "unified-aggregation-theory"
-git  = "https://github.com/MavenRain/unified-aggregation-theory.git"
-rev  = "main"
+path = "../unified-aggregation-theory"
 ```
 
 ## License
