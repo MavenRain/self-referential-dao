@@ -1,0 +1,21 @@
+name = "self-referential-dao"
+version = "0.1.0"
+defaultTargets = ["SelfReferentialDAO"]
+
+[[lean_lib]]
+name = "SelfReferentialDAO"
+
+# This library is the denotational design of a UAT-respecting
+# self-referential DAO.  Its single semantic domain is the
+# `unified-aggregation-theory` reservoir library: every DAO type is
+# given a meaning as a piece of the `Aggregation` (left Kan extension
+# along the orbit projection) machinery.  comp-cat-theory and
+# kan-tactics come in transitively through it and stay importable.
+#
+# Local development uses a `path` require so the build reuses the
+# already-built `unified-aggregation-theory` artifacts next door.
+# Downstream (reservoir) consumers should swap this for the git require
+# documented in README.md.
+[[require]]
+name = "unified-aggregation-theory"
+path = "../unified-aggregation-theory"
