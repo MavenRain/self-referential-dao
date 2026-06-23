@@ -46,6 +46,36 @@ aggregations of `magChoiceRule n β` is the mean-field fixed-point count,
 which bifurcates one to two at the critical coordination pressure
 `β_c = 1` (`fork_transition`).
 
+## Multi-candidate governance (the q-state Potts generalization)
+
+The binary witness above is the `Z2` faction flip. UAT's `Bridge.Potts`
+generalizes it to a `q`-ary Potts spin under the full permutation symmetry
+`S_q` on the colours, reusing the categorical core verbatim. Reading the
+`q` colours as `q` interchangeable candidate choices, this is the same DAO
+with `q` options instead of two factions, and section 10 of
+`SelfReferentialDAO.lean` re-runs the entire self-governance narrative on
+it (delegating to UAT's `potts_disordered_arrow_debreu_regime`,
+`potts_ordered_schelling_ising_regime`, and `potts_arrow_impossibility_regime`):
+
+- `potts_canonical_self_constituting`: the multi-candidate DAO
+  self-constitutes at every `β`, via the disordered phase, single-valued.
+- `potts_nonzero_phase_not_fixpoint`: an ordered phase (one dominant
+  colour) is NOT a self-constitution, the q-ary honesty fix.
+- `potts_no_self_constitution`: a non-anonymous q-ary rule has no
+  self-constituting charter (Arrow-Impossibility).
+- `potts_fork_transition`: object-unique below `β_c = 1`, object-forked
+  above it, `β_c` inherited verbatim.
+
+The new q-ary content is that above `β_c` the ordered phases form an
+`S_q`-orbit of size `q` (one dominant colour each), so the realized-aggregate
+fork is q-fold rather than the binary `±m_*` pair. What is PROVED, though, is
+only the regime currency: at least two object-distinct verdicts (the colour-0
+versus colour-1 pair, via `constitutional_fork`). The full q-fold
+multiplicity as a theorem is flagged as the next UAT-side lemma, not claimed
+here. The honest scope is otherwise unchanged: `IsSelfConstituting` stays
+single-valued (the disordered phase), and the fork lives in
+`Aggregation`-object-cardinality, exactly as in the binary case.
+
 ## Self-reference
 
 Self-reference is the governance endo-operation on constitutions,
@@ -91,7 +121,9 @@ SelfReferentialDAO`, Lean v4.31.0), zero `sorry`, every proof in term
 mode (so the kan-tactics-only-inside-`by` convention holds vacuously,
 and no Mathlib tactic appears). The load-bearing theorems use only the
 standard classical axioms (`propext`, `Classical.choice`, `Quot.sound`);
-the pure regime reductions use `propext` alone.
+the pure regime reductions use `propext` alone (the q-ary
+`potts_no_self_constitution` adds `Quot.sound`, from the `S_q`
+orbit-quotient witness it supplies).
 
 `AxCheck.lean` is a standalone axiom-audit helper: it `#print axioms` for
 every load-bearing theorem. It is not part of the library target, so a

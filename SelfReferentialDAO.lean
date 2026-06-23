@@ -16,6 +16,15 @@
   A DAO is the universal way to lift anonymous local member choices `F`
   to one global outcome along the voter-orbit quotient `orbitProjection act`.
 
+  Two concrete anonymity witnesses are instantiated from UAT's bridge
+  modules: the BINARY `Z₂` faction flip (`spinConfigAction`, sections 8 and
+  9) and its q-ARY generalization, the `S_q` Potts colour symmetry
+  (`pottsConfigAction`, section 10), which reads the DAO as `q`
+  interchangeable candidate choices rather than two interchangeable factions.
+  Both reuse the same generic `Gov` / self-constitution / trichotomy core
+  (sections 1 through 7) unchanged; the q-ary case is a drop-in re-run of the
+  section 8/9 narrative, with the honest scope below carrying over verbatim.
+
   Design conventions honored throughout:
   - Lean 4 only, no Mathlib dependency (builds on comp-cat-theory,
     kan-tactics, unified-aggregation-theory).
@@ -63,6 +72,7 @@ import UnifiedAggregation.Trichotomy
 import UnifiedAggregation.Indiscrete
 import UnifiedAggregation.Characterization
 import UnifiedAggregation.Bridge.SchellingIsing
+import UnifiedAggregation.Bridge.Potts
 
 set_option autoImplicit false
 
@@ -627,6 +637,139 @@ audit trail. -/
 theorem canonical_aggregation_below_critical (n : Nat) {β : Rat} (hβ : β ≤ 1) :
     Nonempty (Aggregation (spinConfigAction n) (magChoiceRule n β)) :=
   match paramagnetic_arrow_debreu_regime n hβ with
+  | ⟨L, _⟩ => ⟨L⟩
+
+/-! ## 10. The q-state Potts generalization (multi-candidate governance)
+
+Sections 8 and 9 instantiate the self-governance machinery at the BINARY
+Ising witness `spinConfigAction` (the `Z₂` faction flip).  UAT's
+`Bridge.Potts` generalizes that witness to a `q`-ary Potts spin under the
+full permutation symmetry `S_q` on the colours, with the categorical core
+(`Aggregation`, `orbitProjection`, the three regime predicates, and
+`trichotomy`) reused verbatim.  Reading the colours as `q` candidate
+choices, this is exactly the DAO with `q` interchangeable options rather
+than two interchangeable factions.
+
+Because sections 1 through 7 are polymorphic in the action, NOTHING in the
+generic core changes.  This section just re-runs the section 8/9 narrative
+on `pottsConfigAction n q` and `pottsChoiceRule n q β`, delegating to UAT's
+Potts regime witnesses (`potts_disordered_arrow_debreu_regime`,
+`potts_ordered_schelling_ising_regime`, `potts_arrow_impossibility_regime`).
+The honest scope of sections 8 and 9 carries over UNCHANGED: the shipped
+`pottsChoiceRule` is the constant rule onto the disordered phase, so
+`IsSelfConstituting` stays single-valued (the uniform phase) at every `β`,
+while the OBJECT-distinct aggregations fork.  The new q-ary content is that
+above `β_c = 1` the ordered phases form an `S_q`-orbit of size `q` (one
+dominant colour each), so the realized-aggregate fork is q-fold rather than
+the binary `±m_*` pair; the regime currency (object-distinctness) only sees
+"at least two", which is all `constitutional_fork` consumes. -/
+
+/-- The disordered-phase realization of the q-ary constitution: the
+`indiscreteLan` at `pottsUniformPhase q β`.  The Potts analogue of
+`zeroPhaseAggregation`; its functor is `constIndiscrete (pottsUniformPhase
+q β) = pottsChoiceRule n q β`, so it lands back on the constitution. -/
+noncomputable def pottsUniformAggregation (n q : Nat) (β : Rat) :
+    Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β) :=
+  indiscreteLan (orbitProjection (pottsConfigAction n q)) (pottsChoiceRule n q β)
+    (pottsUniformPhase q β)
+
+/-- The disordered realization self-constitutes at every `β`: `(Gov L).obj X
+= L.functor.obj ⟨X⟩ = pottsUniformPhase q β = (pottsChoiceRule n q β).obj X`,
+all by `rfl` (both the `indiscreteLan` functor and `pottsChoiceRule` are
+`constIndiscrete (pottsUniformPhase q β)`).  The `β`-hypothesis is unused:
+this holds in every regime, the q-ary mirror of
+`zeroPhaseAggregation_isFixedPoint`. -/
+theorem pottsUniformAggregation_isFixedPoint (n q : Nat) (β : Rat) :
+    IsFixedPointObj (act := pottsConfigAction n q) (pottsUniformAggregation n q β) :=
+  fun _ => rfl
+
+/-- (q-ary A, existence half) The canonical multi-candidate DAO IS
+self-constituting at EVERY `β`, via the disordered realization.  Like
+`canonical_self_constituting`, this is single-valued: `IsSelfConstituting`
+does not bifurcate.  The fork lives in object-distinct aggregations
+(`potts_fork_transition`), not here. -/
+theorem potts_canonical_self_constituting (n q : Nat) (β : Rat) :
+    IsSelfConstituting (act := pottsConfigAction n q) (pottsChoiceRule n q β) :=
+  ⟨pottsUniformAggregation n q β, pottsUniformAggregation_isFixedPoint n q β⟩
+
+/-- (q-ary A, uniqueness half) An ORDERED phase (a single colour `a`
+carrying a nonzero field `m`) is NOT a fixpoint of governance for the
+constant q-ary constitution.  The `indiscreteLan` at `pottsOrdered q a m`
+assigns the verdict `pottsOrdered q a m`, which differs from the
+constitution's `pottsUniform q` at colour `a` (`m ≠ 0`), so `IsFixedPointObj`
+fails.  The Potts analogue of `nonzero_phase_not_fixpoint`, and the precise
+refutation of "the `S_q`-orbit phases are self-constitutions": they are
+object-distinct aggregations, not fixpoints.
+
+Proof: instantiate `IsFixedPointObj` at the constant config `fun _ => a`.
+`(Gov L).obj X` is `pottsOrdered q a m` and `F.obj X` is `pottsUniform q`,
+both by `rfl`; reading both at colour `a` gives `m = 0` (via
+`pottsOrdered_apply_self` and `pottsUniform q a = 0`), contradicting `hm`. -/
+theorem potts_nonzero_phase_not_fixpoint (n q : Nat) {β : Rat} (a : Fin q) {m : Rat}
+    (hm : m ≠ 0) (hfix : IsMeanFieldFixedPoint β m) :
+    ¬ IsFixedPointObj (act := pottsConfigAction n q)
+        (indiscreteLan (orbitProjection (pottsConfigAction n q))
+          (pottsChoiceRule n q β) (Indiscrete.mk ⟨pottsOrdered q a m, pottsOrdered_fixed a hfix⟩)) :=
+  fun hself =>
+    hm ((pottsOrdered_apply_self a m).symm.trans
+      (congrFun
+        (congrArg Subtype.val
+          (congrArg Indiscrete.val (hself (Discrete.mk (fun _ => a))))) a))
+
+/-- (q-ary A, summary) For the shipped constant q-ary constitution the only
+object-wise verdict that self-constitutes is the disordered phase: any
+self-constituting realization assigns `pottsUniformPhase q β` at every
+config.  Hence `IsSelfConstituting` carries a single witness class at every
+`β`; the fork lives entirely in `Aggregation`-object-cardinality.  The Potts
+analogue of `self_constitution_unique_zero_phase` (stated for an arbitrary
+config, since the constant rule distinguishes none). -/
+theorem potts_self_constitution_unique_uniform_phase (n q : Nat) (β : Rat)
+    (L : Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β))
+    (hself : IsFixedPointObj (act := pottsConfigAction n q) L)
+    (X : PottsConfigCat n q) :
+    L.functor.obj { val := X } = pottsUniformPhase q β :=
+  hself X
+
+/-- (q-ary i) NO SELF-CONSTITUTION for a non-anonymous q-ary rule.  The
+identity discrete choice rule on `q`-colour configs is not constant on
+`S_q`-orbits (`n ≥ 1`, `q ≥ 2`), so it occupies the Arrow-Impossibility
+regime and admits no self-constituting realization.  The Potts instance of
+`no_self_constitution`. -/
+theorem potts_no_self_constitution (n q : Nat) (hn : 0 < n) (hq : 1 < q) :
+    ¬ IsSelfConstituting (act := pottsConfigAction n q) (pottsDiscreteChoiceRule n q) :=
+  no_self_constitution (potts_arrow_impossibility_regime n q hn hq)
+
+/-- THE q-ARY GOVERNANCE PHASE TRANSITION IS AN OBJECT-FORK TRANSITION.
+Below the critical coordination pressure (`β ≤ 1`) the multi-candidate DAO's
+verdict is object-unique (consensus on the disordered phase); above it
+(`β > 1`, `q ≥ 2`) two distinct legitimate verdicts from the `S_q`-orbit
+appear at some config (a fork in the realized aggregate).  `β_c = 1` is
+inherited verbatim from UAT via `potts_disordered_arrow_debreu_regime` and
+`potts_ordered_schelling_ising_regime`.  The Potts mirror of
+`fork_transition`.
+
+HONEST READING (carried over from section 9): the second leg asserts two
+object-distinct AGGREGATIONS, NOT two self-constituting fixpoints (see
+`potts_nonzero_phase_not_fixpoint`); `IsSelfConstituting` is single-valued at
+all `β` (`potts_canonical_self_constituting`). -/
+theorem potts_fork_transition (n q : Nat) (hq : 1 < q) (β : Rat) :
+    (β ≤ 1 →
+       ∃ L : Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β),
+         ∀ L' : Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β),
+           ∀ X : PottsConfigCat n q, (Gov L).obj X = (Gov L').obj X) ∧
+    (1 < β →
+       ∃ L₁ L₂ : Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β),
+         ∃ X : PottsConfigCat n q, (Gov L₁).obj X ≠ (Gov L₂).obj X) :=
+  ⟨fun hβ => unique_self_constitution (potts_disordered_arrow_debreu_regime n q hβ),
+   fun hβ => constitutional_fork (potts_ordered_schelling_ising_regime n q hq hβ)⟩
+
+/-- Existence corollary: below `β_c` the canonical q-ary DAO has an
+aggregation (the `indiscreteLan` at the unique disordered phase).  Strictly
+weaker than `potts_canonical_self_constituting`, kept for the regime audit
+trail; the Potts mirror of `canonical_aggregation_below_critical`. -/
+theorem potts_canonical_aggregation_below_critical (n q : Nat) {β : Rat} (hβ : β ≤ 1) :
+    Nonempty (Aggregation (pottsConfigAction n q) (pottsChoiceRule n q β)) :=
+  match potts_disordered_arrow_debreu_regime n q hβ with
   | ⟨L, _⟩ => ⟨L⟩
 
 end SelfReferentialDAO
